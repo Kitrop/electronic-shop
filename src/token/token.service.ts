@@ -70,10 +70,11 @@ export class TokenService {
 
   async findRefreshToken(accessToken: string, res: Response) {
     const findData = await this.prisma.user.findUnique({
-      // @ts-ignore
       where: { accessToken: accessToken },
       select: { refreshToken: true }
     })
+
+    console.log(`Find data: ${findData}`)
 
     if (!findData || !findData.refreshToken) {
       throw new HttpException({
@@ -84,6 +85,8 @@ export class TokenService {
 
     const isValid = await this.jwtService.verify(findData.refreshToken, { secret: process.env.SECRET })
 
+    console.log(`isValid: ${isValid}`)
+    
     if (!isValid) {
       throw new HttpException({
         statusCode: 401,

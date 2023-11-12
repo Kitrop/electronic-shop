@@ -1,5 +1,5 @@
 import {Body, Controller, Get, Post, Query, Res, UseGuards} from '@nestjs/common';
-import {CreateUserDto, LoginDto} from "../DTO/UsersDto";
+import {ChangeRoleDto, CreateUserDto, LoginDto} from "../DTO/UsersDto";
 import {UsersService} from "./users.service";
 import {Response} from "express";
 import {Roles} from "./users.decorator";
@@ -40,5 +40,10 @@ export class UsersController {
   @Get('test')
   async test() {
     return 'success'
+  }
+
+  @Post('changeRole')
+  async changeRole(@Body() changeRole: ChangeRoleDto) {
+    return this.usersService.changeRole(changeRole)
   }
 }

@@ -1,5 +1,5 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {CreateUserDto, LoginDto} from "../DTO/UsersDto";
+import {ChangeRoleDto, CreateUserDto, LoginDto} from "../DTO/UsersDto";
 import {PrismaService} from "../prisma.service";
 import {compare, hash} from "bcrypt";
 import {TokenService} from "../token/token.service";
@@ -174,6 +174,8 @@ export class UsersService {
       role: candidate.role
     })
 
+    console.log(tokens.accessToken)
+
     res.cookie('accessToken', tokens.accessToken)
 
     await this.prisma.user.update({
@@ -199,6 +201,50 @@ export class UsersService {
     throw new HttpException({
       statusCode: 200,
       message: 'user logout'
+    }, HttpStatus.OK)
+  }
+
+  async changeRole(changeRole: ChangeRoleDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: changeRole.id }
+    })
+
+    if (!user) {
+      throw new HttpException({
+        statusCode: 404,
+        message: 'user not found'
+      }, HttpStatus.NOT_FOUND)
+    }
+
+    const tokens = await this.tokenService.generateTokens({
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      role: changeRole.role
+    })
+
+    const updateUser = await this.prisma.user.update({
+      where: {
+        id: changeRole.id
+      },
+      data: {
+        role: changeRole.role,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken
+      }
+    })
+
+
+
+    throw new HttpException({
+      statusCode: 200,
+      message: 'role change',
+      data: {
+        id: updateUser.id,
+        email: updateUser.email,
+        username: updateUser.username,
+        role: updateUser.role
+      }
     }, HttpStatus.OK)
   }
 

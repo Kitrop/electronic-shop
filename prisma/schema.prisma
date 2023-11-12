@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String
+  email        String   @unique
+  password     String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  accessToken  String   @unique
+  refreshToken String   @unique
+  Review       Review[]
+  Order        Order[]
+}
+
+model Product {
+  id            Int             @id @default(autoincrement())
+  name          String
+  price         Int
+  description   String
+  rating        Int
+  brandId       Int
+  Brand         Brand           @relation(fields: [brandId], references: [id])
+  Category      Category        @relation(fields: [categoryId], references: [id])
+  categoryId    Int
+  Review        Review[]
+  Order_Product Order_Product[]
+}
+
+model Review {
+  id        Int     @id @default(autoincrement())
+  User      User    @relation(fields: [userId], references: [id])
+  userId    Int
+  Product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  text      String
+  rating    Int
+}
+
+model Order {
+  id            Int             @id @default(autoincrement())
+  User          User            @relation(fields: [userId], references: [id])
+  userId        Int
+  summary       Int
+  status        String
+  Order_Product Order_Product[]
+}
+
+model Order_Product {
+  orderId   Int
+  productId Int
+  count     Int
+  Order     Order   @relation(fields: [orderId], references: [id])
+  Product   Product @relation(fields: [productId], references: [id])
+
+  @@id([orderId, productId])
+}
+
+model Brand {
+  id      Int       @id @default(autoincrement())
+  name    String
+  Product Product[]
+}
+
+model Category {
+  id      Int       @id @default(autoincrement())
+  type    String
+  Product Product[]
+}
+
+enum Role {
+  USER
+  ADMIN
+  BANNED
+  NOT_ACTIVE
+}

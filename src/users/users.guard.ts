@@ -19,16 +19,16 @@ export class UsersGuard implements CanActivate {
       return true
     }
 
-    let accessToken = req.cookie.accessToken
+    let token = req.cookies
 
-    if (!accessToken) {
+    if (!token.accessToken) {
       throw new HttpException({
         statusCode: 401,
         message: 'Unauthorised user'
       }, HttpStatus.UNAUTHORIZED)
     }
 
-    const decodeAccessToken = this.jwtService.decode(accessToken)
+    const decodeAccessToken = await this.jwtService.decode(token.accessToken)
 
     if(!decodeAccessToken || !decodeAccessToken.exp) {
       throw new HttpException({
@@ -39,12 +39,15 @@ export class UsersGuard implements CanActivate {
 
     const currentTime = Math.floor(Date.now() / 1000)
     if (currentTime > decodeAccessToken.exp) {
-      accessToken = await this.tokenService.findRefreshToken(accessToken, res)
+      token.accessToken = await this.tokenService.findRefreshToken(token.accessToken, res)
+      console.log("!")
     }
 
-    const user = this.jwtService.verify(accessToken, {secret: process.env.SECRET})
+    const user = this.jwtService.verify(token.accessToken, {secret: process.env.SECRET})
     req.user = user
 
-    return requiredRoles.includes(user.role)
+    console.log(requiredRoles.includes(user.data.role))
+
+    return requiredRoles.includes(user.data.role)
   }
 }

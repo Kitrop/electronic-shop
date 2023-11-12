@@ -1,4 +1,5 @@
-import {IsEmail, IsString, Length, Matches} from "class-validator";
+import {IsEmail, IsNumber, IsString, Length, Matches} from "class-validator";
+import {Role} from "@prisma/client";
 
 
 export class CreateUserDto {
@@ -21,4 +22,13 @@ export class LoginDto {
 
   @IsString()
   password: string
+}
+
+
+export class ChangeRoleDto {
+  @IsNumber()
+  id: number
+
+  @IsString()
+  role: Role
 }
