@@ -4,6 +4,7 @@ import {JwtService} from "@nestjs/jwt";
 import * as process from "process";
 import {PrismaService} from "../prisma.service";
 import {Response} from "express";
+import {retry} from "rxjs";
 
 @Injectable()
 export class TokenService {
@@ -86,7 +87,7 @@ export class TokenService {
     const isValid = await this.jwtService.verify(findData.refreshToken, { secret: process.env.SECRET })
 
     console.log(`isValid: ${isValid}`)
-    
+
     if (!isValid) {
       throw new HttpException({
         statusCode: 401,
@@ -116,5 +117,22 @@ export class TokenService {
     res.cookie('accessToken', newAccessToken)
 
     return newAccessToken
+  }
+
+  async findRefreshInDB(accessToken: string) {
+    const refreshToken = this.prisma.user.findUnique({
+      where: {
+        accessToken
+      },
+      select: {
+        refreshToken: true
+      }
+    })
+
+    if (!refreshToken) {
+      return 'not found'
+    }
+
+    return refreshToken
   }
 }

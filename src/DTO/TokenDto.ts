@@ -1,4 +1,5 @@
 import {IsEmail, IsNumber, IsString} from "class-validator";
+import {$Enums} from ".prisma/client";
 
 export class generateTokensDto {
   @IsNumber()
@@ -11,5 +12,5 @@ export class generateTokensDto {
   username: string
 
   @IsString()
-  role: string
+  role: $Enums.Role
 }

@@ -1,10 +1,10 @@
 import {CanActivate, ExecutionContext, HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import { Observable } from 'rxjs';
 import {JwtService} from "@nestjs/jwt";
 import {TokenService} from "../token/token.service";
 import * as process from "process";
-import { Reflector } from '@nestjs/core'
+import {Reflector} from '@nestjs/core'
 import {ROLES_KEY} from "./users.decorator";
+
 
 @Injectable()
 export class UsersGuard implements CanActivate {
@@ -28,26 +28,45 @@ export class UsersGuard implements CanActivate {
       }, HttpStatus.UNAUTHORIZED)
     }
 
-    const decodeAccessToken = await this.jwtService.decode(token.accessToken)
-
-    if(!decodeAccessToken || !decodeAccessToken.exp) {
+    try {
+      const verifyAccessToken = await this.jwtService.verify(token.accessToken, {secret: process.env.SECRET})
+      if (!verifyAccessToken) {
+        throw new HttpException({
+          statusCode: 401,
+          message: 'Invalid accessToken'
+        }, HttpStatus.UNAUTHORIZED)
+      }
+    } catch (e) {
+      console.log(e)
       throw new HttpException({
         statusCode: 401,
         message: 'Invalid accessToken'
-      }, HttpStatus.UNAUTHORIZED)
+      }, HttpStatus.UNAUTHORIZED);
     }
 
-    const currentTime = Math.floor(Date.now() / 1000)
-    if (currentTime > decodeAccessToken.exp) {
-      token.accessToken = await this.tokenService.findRefreshToken(token.accessToken, res)
-      console.log("!")
+    try {
+      const decodeAccessToken = await this.jwtService.decode(token.accessToken)
+
+      if(!decodeAccessToken || !decodeAccessToken.exp) {
+        throw new HttpException({
+          statusCode: 401,
+          message: 'Invalid accessToken'
+        }, HttpStatus.UNAUTHORIZED)
+      }
+
+      const currentTime = Math.floor(Date.now() / 1000)
+      if (currentTime > decodeAccessToken.exp) {
+        token.accessToken = await this.tokenService.findRefreshToken(token.accessToken, res)
+        console.log("!")
+      }
+
+      const user = this.jwtService.verify(token.accessToken, {secret: process.env.SECRET})
+      req.user = user
+
+      return requiredRoles.includes(user.data.role)
     }
-
-    const user = this.jwtService.verify(token.accessToken, {secret: process.env.SECRET})
-    req.user = user
-
-    console.log(requiredRoles.includes(user.data.role))
-
-    return requiredRoles.includes(user.data.role)
+    catch(e) {
+      return false
+    }
   }
 }

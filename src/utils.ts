@@ -8,3 +8,14 @@ export interface IUser {
   role: $Enums.Role,
   createdAt: Date
 }
+
+export function isRoleInEnum(role, ENUM) {
+  return role in ENUM;
+}
+
+export enum RoleEnum {
+  "USER",
+  "ADMIN",
+  "BANNED",
+  "NOT_ACTIVE",
+}

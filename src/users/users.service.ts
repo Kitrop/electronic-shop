@@ -4,6 +4,7 @@ import {PrismaService} from "../prisma.service";
 import {compare, hash} from "bcrypt";
 import {TokenService} from "../token/token.service";
 import {Response} from "express";
+import {isRoleInEnum, RoleEnum} from "../utils";
 
 @Injectable()
 export class UsersService {
@@ -82,7 +83,6 @@ export class UsersService {
       email: updatedUser.email,
       role: updatedUser.role,
       accessToken: updatedUser.accessToken,
-      refresh: updatedUser.refreshToken,
       createdAt: updatedUser.createdAt,
     }
   }
@@ -216,6 +216,14 @@ export class UsersService {
       }, HttpStatus.NOT_FOUND)
     }
 
+    if(!isRoleInEnum(changeRole.role, RoleEnum)) {
+      throw new HttpException({
+        statusCode: 400,
+        message: `The role of ${changeRole.role} does not exist`
+      }, HttpStatus.BAD_REQUEST)
+
+    }
+
     const tokens = await this.tokenService.generateTokens({
       id: user.id,
       email: user.email,
@@ -235,7 +243,6 @@ export class UsersService {
     })
 
 
-
     throw new HttpException({
       statusCode: 200,
       message: 'role change',
@@ -248,8 +255,61 @@ export class UsersService {
     }, HttpStatus.OK)
   }
 
+  // TODO: Добавить в changePassword провеку jwt
+  async changePassword(id: number, oldPassword: string, newPassword: string) {
+    const candidate = await this.prisma.user.findUnique({
+      where: { id }
+    })
+
+    if (!candidate) {
+      throw new HttpException({
+        statusCode: 404,
+        message: "user not found"
+      }, HttpStatus.NOT_FOUND)
+    }
+
+    if (oldPassword === newPassword) {
+      throw new HttpException({
+        statusCode: 400,
+        message: 'old and new passwords cannot be the same'
+      }, HttpStatus.BAD_REQUEST)
+    }
+
+    const isValidPassword = await compare(oldPassword, candidate.password)
+
+    if (!isValidPassword) {
+      throw new HttpException({
+        statusCode: 400,
+        message: "old passwords incorrect"
+      }, HttpStatus.BAD_REQUEST)
+    }
+
+
+    // Compare the password from the client and the password from the database
+    const newHashPassword = await hash(newPassword, 7)
+
+    const updateUser = await this.prisma.user.update({
+      where: { id },
+      data: { password: newHashPassword }
+    })
+
+    if (!updateUser) {
+      throw new HttpException({
+        statusCode: 501,
+        message: "user's password is not updated, try sending the request again"
+      }, HttpStatus.BAD_REQUEST)
+    }
+
+    throw new HttpException({
+      data: 200,
+      message: "password updated"
+    }, HttpStatus.OK)
+  }
+
   async getAll() {
     return this.prisma.user.findMany()
   }
 
 }
+
+

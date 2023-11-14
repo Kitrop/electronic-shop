@@ -1,5 +1,6 @@
 import {IsEmail, IsNumber, IsString, Length, Matches} from "class-validator";
 import {Role} from "@prisma/client";
+import {$Enums} from ".prisma/client";
 
 
 export class CreateUserDto {
@@ -21,6 +22,8 @@ export class LoginDto {
   email: string
 
   @IsString()
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {message: 'password too weak'})
+  @Length(4, 50, { message: 'password must be between 4 and 50 characters long'})
   password: string
 }
 
@@ -30,5 +33,19 @@ export class ChangeRoleDto {
   id: number
 
   @IsString()
-  role: Role
+  role: $Enums.Role
+}
+
+export class ChangePasswordDto {
+  @IsNumber()
+  id: number
+
+  @IsString()
+  @Length(4, 50, { message: 'password must be between 4 and 50 characters long'})
+  oldPassword: string
+
+  @IsString()
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {message: 'password too weak'})
+  @Length(4, 50, { message: 'password must be between 4 and 50 characters long'})
+  newPassword: string
 }
