@@ -257,10 +257,13 @@ export class UsersService {
 
   // TODO: Добавить в changePassword провеку jwt
   async changePassword(id: number, oldPassword: string, newPassword: string) {
+
+    // Find user by id
     const candidate = await this.prisma.user.findUnique({
       where: { id }
     })
-
+    
+    // Check if user exists
     if (!candidate) {
       throw new HttpException({
         statusCode: 404,
@@ -268,6 +271,7 @@ export class UsersService {
       }, HttpStatus.NOT_FOUND)
     }
 
+    // If old password match with new password
     if (oldPassword === newPassword) {
       throw new HttpException({
         statusCode: 400,
@@ -275,8 +279,12 @@ export class UsersService {
       }, HttpStatus.BAD_REQUEST)
     }
 
-    const isValidPassword = await compare(oldPassword, candidate.password)
 
+    // Check old password with password user from DB
+    const isValidPassword = await compare(oldPassword, candidate.password)
+    
+
+    // If password not compare
     if (!isValidPassword) {
       throw new HttpException({
         statusCode: 400,
@@ -284,15 +292,17 @@ export class UsersService {
       }, HttpStatus.BAD_REQUEST)
     }
 
-
-    // Compare the password from the client and the password from the database
+    // Hash new password
     const newHashPassword = await hash(newPassword, 7)
-
+    
+    // Update user password 
     const updateUser = await this.prisma.user.update({
       where: { id },
       data: { password: newHashPassword }
     })
+    
 
+    // If there is an error
     if (!updateUser) {
       throw new HttpException({
         statusCode: 501,
@@ -300,6 +310,7 @@ export class UsersService {
       }, HttpStatus.BAD_REQUEST)
     }
 
+    // Return message about new password
     throw new HttpException({
       data: 200,
       message: "password updated"

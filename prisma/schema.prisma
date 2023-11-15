@@ -28,7 +28,7 @@ model Product {
   name          String
   price         Int
   description   String
-  rating        Int
+  rating        Int[] @default([])
   brandId       Int
   Brand         Brand           @relation(fields: [brandId], references: [id])
   Category      Category        @relation(fields: [categoryId], references: [id])
