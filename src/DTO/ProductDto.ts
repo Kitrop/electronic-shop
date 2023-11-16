@@ -1,32 +1,61 @@
-import { IsNumber, IsString, Length, MinLength } from "class-validator"
+import {IsArray, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Length, Max, Min} from "class-validator"
+import {IsNotEmail} from "../utils";
 
-export class AddBrand {
-    @IsString()
-    @Length(3, 70)
-    name: string
+export class AddBrandDto {
+  @IsString() @Length(3, 70)
+  name: string
 }
 
-export class AddCategory {
-    @IsString()
-    @Length(3, 70)
-    type: string
+export class AddCategoryDto {
+  @IsString() @Length(3, 70)
+  type: string
 }
 
-export class CreateProduct {
-    @IsString()
-    @Length(3, 150)
-    name: string
+export class CreateProductDto {
+  @IsString() @Length(3, 150) @IsNotEmail({message: 'name must not be an email'})
+  name: string
 
-    @IsNumber()
-    price: number
+  @IsNumber()
+  @IsPositive()
+  price: number
 
-    @IsString()
-    @Length(10, 500)
-    description: string
+  @IsNumber() @Min(0) @Max(99) @IsOptional()
+  discount: number
 
-    @IsNumber()
-    brandId: number
+  @IsString() @Length(10, 1500)
+  description: string
 
-    @IsNumber()
-    categoryId: number
+  @IsOptional() @IsArray() @IsNumber({}, {each: true}) @IsPositive({each: true})
+  rating: number[]
+
+  @IsNumber() @IsPositive()
+  brandId: number
+
+  @IsNumber() @IsPositive()
+  categoryId: number
+}
+
+
+export class ChangeProductDto {
+  @IsNumber()
+  @IsNotEmpty()
+  id: number
+
+  @IsOptional() @IsString()
+  name: string
+
+  @IsOptional() @IsNumber() @IsPositive()
+  price: number
+
+  @IsOptional() @IsNumber() @Min(0) @Max(99)
+  discount: number
+
+  @IsOptional() @IsString() @Length(10, 1500)
+  description: string
+
+  @IsNumber() @IsPositive()
+  brandId: number
+
+  @IsNumber() @IsPositive()
+  categoryId: number
 }

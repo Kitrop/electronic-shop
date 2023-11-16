@@ -11,30 +11,33 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   username     String
-  email        String   @unique
+  email        String     @unique
   password     String
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  accessToken  String   @unique
-  refreshToken String   @unique
+  role         Role       @default(USER)
+  createdAt    DateTime   @default(now())
+  accessToken  String     @unique
+  refreshToken String     @unique
   Review       Review[]
   Order        Order[]
+  Favorite     Favorite[]
 }
 
 model Product {
   id            Int             @id @default(autoincrement())
   name          String
   price         Int
+  discount      Int             @default(0)
   description   String
-  rating        Int[] @default([])
+  rating        Int[]           @default([])
   brandId       Int
   Brand         Brand           @relation(fields: [brandId], references: [id])
-  Category      Category        @relation(fields: [categoryId], references: [id])
   categoryId    Int
+  Category      Category        @relation(fields: [categoryId], references: [id])
   Review        Review[]
   Order_Product Order_Product[]
+  Favorite      Favorite[]
 }
 
 model Review {
@@ -68,14 +71,22 @@ model Order_Product {
 
 model Brand {
   id      Int       @id @default(autoincrement())
-  name    String
+  name    String    @unique()
   Product Product[]
 }
 
 model Category {
   id      Int       @id @default(autoincrement())
-  type    String
+  type    String    @unique()
   Product Product[]
+}
+
+model Favorite {
+  id        Int     @id @default(autoincrement())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
 }
 
 enum Role {

@@ -8,10 +8,11 @@ import {PrismaService} from "./prisma.service";
 import { TokenModule } from './token/token.module';
 import {JwtService} from "@nestjs/jwt";
 import { ProductModule } from './product/product.module';
+import {UsersGuard} from "./users/users.guard";
 
 @Module({
   imports: [UsersModule, ConfigModule.forRoot({ isGlobal: true }), TokenModule, ProductModule],
   controllers: [AppController, UsersController],
-  providers: [AppService, JwtService],
+  providers: [AppService, JwtService, UsersGuard],
 })
 export class AppModule {}

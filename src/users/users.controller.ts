@@ -44,8 +44,7 @@ export class UsersController {
     return 'success'
   }
 
-  @UseGuards(UsersGuard)
-  @Roles('ADMIN')
+
   @Post('/change/role')
   async changeRole(@Body() changeRole: ChangeRoleDto) {
     return this.usersService.changeRole(changeRole)

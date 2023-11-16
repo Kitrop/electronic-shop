@@ -1,4 +1,11 @@
 import {$Enums} from "@prisma/client";
+import {
+  registerDecorator,
+  ValidationArguments,
+  ValidationOptions,
+  ValidatorConstraint,
+  ValidatorConstraintInterface
+} from "class-validator";
 
 export interface IUser {
   id: number,
@@ -18,4 +25,24 @@ export enum RoleEnum {
   "ADMIN",
   "BANNED",
   "NOT_ACTIVE",
+}
+
+@ValidatorConstraint({ async: true })
+export class IsNotEmailConstraint implements ValidatorConstraintInterface {
+  validate(username: any, args: ValidationArguments) {
+    const re = /\S+@\S+\.\S+/;
+    return !re.test(username);
+  }
+}
+
+export function IsNotEmail(validationOptions?: ValidationOptions) {
+  return function (object: any, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [],
+      validator: IsNotEmailConstraint,
+    });
+  };
 }

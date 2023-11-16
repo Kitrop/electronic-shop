@@ -1,14 +1,16 @@
-import {IsEmail, IsNumber, IsString, Length, Matches} from "class-validator";
-import {Role} from "@prisma/client";
+import {IsEmail, IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString, Length, Matches} from "class-validator";
 import {$Enums} from ".prisma/client";
+import {IsNotEmail, RoleEnum} from "../utils";
 
 
 export class CreateUserDto {
   @IsString()
   @Length(4, 40, { message: 'username must be between 4 and 40 characters long'})
+  @IsNotEmail({ message: 'username must not be an email'})
   username: string
 
   @IsEmail()
+  @IsNotEmpty()
   email: string
 
   @Matches(/^(?=.*[A-Z])(?=.*[0-9])(?=.*[a-z]).*$/, {message: 'password too weak'})
@@ -19,6 +21,7 @@ export class CreateUserDto {
 
 export class LoginDto {
   @IsEmail()
+  @IsNotEmpty()
   email: string
 
   @IsString()
@@ -30,14 +33,18 @@ export class LoginDto {
 
 export class ChangeRoleDto {
   @IsNumber()
+  @IsPositive()
   id: number
 
-  @IsString()
+  @IsString({ })
+  @IsNotEmpty()
+  @IsEnum(RoleEnum)
   role: $Enums.Role
 }
 
 export class ChangePasswordDto {
   @IsNumber()
+  @IsPositive()
   id: number
 
   @IsString()

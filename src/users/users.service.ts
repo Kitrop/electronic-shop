@@ -224,6 +224,13 @@ export class UsersService {
 
     }
 
+    if (user.role === changeRole.role) {
+      throw new HttpException({
+        statusCode: 400,
+        message: 'this user already has this role'
+      }, HttpStatus.BAD_REQUEST)
+    }
+
     const tokens = await this.tokenService.generateTokens({
       id: user.id,
       email: user.email,
@@ -320,7 +327,6 @@ export class UsersService {
   async getAll() {
     return this.prisma.user.findMany()
   }
-
 }
 
 
