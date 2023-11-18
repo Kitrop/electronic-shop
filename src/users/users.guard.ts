@@ -30,42 +30,57 @@ export class UsersGuard implements CanActivate {
 
     try {
       const verifyAccessToken = await this.jwtService.verify(token.accessToken, {secret: process.env.SECRET})
+
       if (!verifyAccessToken) {
         throw new HttpException({
           statusCode: 401,
-          message: 'Invalid accessToken'
+          message: 'Invalid accessToken, some error'
         }, HttpStatus.UNAUTHORIZED)
       }
-    } catch (e) {
-      console.log(e)
-      throw new HttpException({
-        statusCode: 401,
-        message: 'Invalid accessToken'
-      }, HttpStatus.UNAUTHORIZED);
+    }
+    catch (e) {
+      console.log('first catch')
+      // Нужно найти и создать новый токен
+      const result = await this.tokenService.isValidAccessToken(token.accessToken, res)
+
+      if (!result) {
+        console.log('some error')
+        throw new HttpException({
+          statusCode: 401,
+          message: 'Invalid accessToken, catch'
+        }, HttpStatus.UNAUTHORIZED);
+      }
+      if (typeof result === "string") {
+        res.cookie('accessToken', result)
+        token.accessToken = result
+      }
     }
 
     try {
-      const decodeAccessToken = await this.jwtService.decode(token.accessToken)
+      const decodeAccessToken = await this.jwtService.decode(token.accessToken) ///
 
       if(!decodeAccessToken || !decodeAccessToken.exp) {
+        console.log('error by time')
         throw new HttpException({
           statusCode: 401,
-          message: 'Invalid accessToken'
+          message: 'Invalid accessToken by time'
         }, HttpStatus.UNAUTHORIZED)
       }
 
       const currentTime = Math.floor(Date.now() / 1000)
       if (currentTime > decodeAccessToken.exp) {
         token.accessToken = await this.tokenService.findRefreshToken(token.accessToken, res)
-        console.log("!")
+        console.log("!!!")
       }
 
-      const user = this.jwtService.verify(token.accessToken, {secret: process.env.SECRET})
+      const user = this.jwtService.verify(token.accessToken, {secret: process.env.SECRET}) ///
       req.user = user
 
-      return requiredRoles.includes(user.data.role)
+      console.log(user)
+      return requiredRoles.includes(user.role)
     }
     catch(e) {
+      console.log(e)
       return false
     }
   }

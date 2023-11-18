@@ -19,7 +19,7 @@ export class TokenService {
         {data},
         {
           secret: process.env.SECRET,
-          expiresIn: '30m',
+          expiresIn: '1m',
         },
       )
 
@@ -54,16 +54,20 @@ export class TokenService {
       }, HttpStatus.BAD_REQUEST)
     }
 
+
+    console.log('refresh token data')
+    console.log(verifyRefreshToken.data.role)
+
     const payload = {
-      id: verifyRefreshToken.id,
-      username: verifyRefreshToken.username,
-      email: verifyRefreshToken.email,
-      role: verifyRefreshToken.role
+      id: verifyRefreshToken.data.id,
+      username: verifyRefreshToken.data.username,
+      email: verifyRefreshToken.data.email,
+      role: verifyRefreshToken.data.role
     }
 
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.SECRET,
-      expiresIn: '30m'
+      expiresIn: '1m'
     })
 
     await this.prisma.user.update({
@@ -109,7 +113,7 @@ export class TokenService {
 
     const newAccessToken = this.jwtService.sign(payload, {
       secret: process.env.SECRET,
-      expiresIn: '30m'
+      expiresIn: '5m'
     })
 
     const updatedUser = await this.prisma.user.update({
@@ -143,12 +147,23 @@ export class TokenService {
 
 
   async isValidAccessToken(accessToken: string, res: Response) {
-    const verifyAccess = this.jwtService.verify(accessToken, { secret: process.env.SECRET })
-
-    if (!verifyAccess) {
-
+    try {
+      const verifyAccess = this.jwtService.verify(accessToken, { secret: process.env.SECRET })
+      return true
+    }
+    catch (e) {
       const result = await this.findRefreshInDB(accessToken)
       if (result === "not found") return false
+
+
+      if (!result || !result.refreshToken) {
+        throw new HttpException({
+          statusCode: 400,
+          message: 'invalid token'
+        }, HttpStatus.BAD_REQUEST)
+      }
+
+      if (result && result.refreshToken) console.log(result.refreshToken)
 
       const valid = this.jwtService.verify(result.refreshToken, { secret: process.env.SECRET })
       if (!valid) return false
@@ -158,7 +173,5 @@ export class TokenService {
 
       return newAccessToken
     }
-
-    return true
   }
 }

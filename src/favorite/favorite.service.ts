@@ -12,121 +12,99 @@ export class FavoriteService {
   }
 
   async addToFavorite(addFavorite: AddToFavoriteDto, res: Response, req: Request) {
+    const findProduct = await this.prismaService.product.findUnique({
+      where: {id: addFavorite.productId},
+    });
 
-    // Find product by id
-    const findProduct = this.prismaService.product.findUnique({
-      where: {id: addFavorite.productId}
+    if (!findProduct) {
+      throw new HttpException(
+        {statusCode: 404, message: 'product not found'},
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const cookies = req.cookies;
+    const accessToken = cookies.accessToken
+
+    if (!accessToken) {
+      throw new HttpException(
+        {statusCode: 400, message: 'no token'},
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const result = await this.tokenService.isValidAccessToken(accessToken, res);
+
+    if (!result) {
+      throw new HttpException(
+        {statusCode: 400, message: 'invalid token'},
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const decode = await this.jwtService.decode(
+      typeof result === 'string' ? result : accessToken,
+    );
+
+    const userId: number = decode.data.id;
+
+    console.log(`userID: ${userId}`)
+
+    const find = await this.prismaService.favorite.findMany({
+      where: {
+        userId,
+        productId: addFavorite.productId,
+      },
+    });
+
+    if (find.length) {
+      throw new HttpException(
+        {
+          statusCode: 400,
+          message: 'this user already has this item in his favorites',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const createdFavorite = await this.prismaService.favorite.create({
+      data: {
+        User: {
+          connect: {
+            id: userId,
+          },
+        },
+        Product: {
+          connect: {
+            id: addFavorite.productId,
+          },
+        },
+      },
+      include: {
+        Product: true,
+      },
     })
 
-    // If the product with this id does not exist
-    if (!findProduct) throw new HttpException({
-      statusCode: 404,
-      message: 'product not found'
-    }, HttpStatus.NOT_FOUND)
-
-    // Get the token from the cookie
-    const accessToken = req.cookies('accessToken')
-
-    // If the token is missing
-    if (!accessToken) throw new HttpException({
-      statusCode: 400,
-      message: 'no token'
-    }, HttpStatus.BAD_REQUEST)
-
-
-    // Check the token for validity or get a new token using the method from tokenService
-    const result = await this.tokenService.isValidAccessToken(accessToken, res)
-
-    // If the result of the method returned false
-    if (!result) {
-      throw new HttpException({
-        statusCode: 400,
-        message: 'invalid token'
-      }, HttpStatus.BAD_REQUEST)
-    } else {
-      // If we have a new token returned to us
-      if (typeof result === "string") {
-
-        // Decode the token to get data from it
-        const decode = await this.jwtService.decode(result)
-
-        console.log("DECODED:")
-        console.log(decode)
-
-        // Get user id from token
-        const userId: number = decode.id
-
-        // TODO: Сделать проверку на то что у пользователя не добавлен этот товар
-
-        const find = await this.prismaService.favorite.findMany({
-          where: {
-            userId,
-            productId: addFavorite.productId
-          }
-        })
-
-        if (find.length) {
-          throw new HttpException({
-            statusCode: 400,
-            message: 'this user already has this item in his favorites'
-          }, HttpStatus.BAD_REQUEST)
-        }
-
-        // Add product to favorites
-        const createdFavorite = await this.prismaService.favorite.create({
-          data: {
-            userId,
-            productId: addFavorite.productId,
-          },
-          include: {Product: true}
-        })
-
-        // If the product has not been added to your favorites
-        if (!createdFavorite) throw new HttpException({
-          statusCode: 400,
-          message: 'product not added to favorite'
-        }, HttpStatus.BAD_REQUEST)
-      }
-      // If the method returned true
-      else {
-        const decodeAccessToken = await this.jwtService.decode(accessToken)
-        const userId: number = decodeAccessToken.id
-
-
-        const find = await this.prismaService.favorite.findMany({
-          where: {
-            userId,
-            productId: addFavorite.productId
-          }
-        })
-
-        if (find.length) {
-          throw new HttpException({
-            statusCode: 400,
-            message: 'this user already has this item in his favorites'
-          }, HttpStatus.BAD_REQUEST)
-        }
-
-        const createdFavorite = await this.prismaService.favorite.create({
-          data: {
-            userId: userId,
-            productId: addFavorite.productId,
-          },
-          include: {Product: true}
-        })
-
-        throw new HttpException({
-          statusCode: 201,
-          message: 'this product added to favorite',
-          data: {
-            id: createdFavorite.id,
-            userId: createdFavorite.userId,
-            productName: createdFavorite.Product.name,
-            productId: createdFavorite.productId,
-          }
-        }, HttpStatus.CREATED)
-      }
-
+    if (!createdFavorite) {
+      throw new HttpException(
+        {statusCode: 400, message: 'product not added to favorite'},
+        HttpStatus.BAD_REQUEST,
+      );
     }
+
+    throw new HttpException(
+      {
+        statusCode: 201,
+        message: 'this product added to favorite',
+        data: {
+          id: createdFavorite.id,
+          userId: createdFavorite.userId,
+          productName: createdFavorite.Product.name,
+          productId: createdFavorite.productId,
+        },
+      },
+      HttpStatus.CREATED,
+    );
   }
+
 }
