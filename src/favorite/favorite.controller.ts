@@ -8,8 +8,8 @@ export class FavoriteController {
   constructor(private readonly favoriteService: FavoriteService) {
   }
 
-  @Post('add')
+  @Post('/')
   async addFavorite(@Body() body: AddToFavoriteDto, @Res({ passthrough: true }) res: Response, @Req() req: Request) {
-    return this.favoriteService.addToFavorite(body, res, req)
+    return this.favoriteService.toggleFavorite(body, res, req)
   }
 }

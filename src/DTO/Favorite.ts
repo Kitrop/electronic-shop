@@ -7,3 +7,10 @@ export class AddToFavoriteDto {
   @IsNotEmpty()
   productId: number
 }
+
+export class removeFavorite {
+  @IsNumber()
+  @IsPositive()
+  @IsNotEmpty()
+  productId: number
+}

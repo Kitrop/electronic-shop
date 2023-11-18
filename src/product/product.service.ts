@@ -163,7 +163,7 @@ export class ProductService {
 
     const products = await this.prisma.product.findMany({
       where,
-      include: { Category: true, Brand: true }
+      include: { Category: true, Brand: true, Favorite: true }
     });
 
     if (!products.length) {
@@ -175,6 +175,9 @@ export class ProductService {
 
     const productData = products.map(m => {
       const averageRating = m.rating.reduce((a, b) => a + b, 0) / m.rating.length;
+
+      let isFavorite = m.Favorite.some(f => m.id === f.productId)
+
       return {
         id: m.id,
         name: m.name,
@@ -183,7 +186,8 @@ export class ProductService {
         description: m.description,
         rating: averageRating,
         brand: m.Brand.name,
-        category: m.Category.type
+        category: m.Category.type,
+        isFavorite
       };
     });
 
