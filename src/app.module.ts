@@ -9,10 +9,14 @@ import { TokenModule } from './token/token.module';
 import {JwtService} from "@nestjs/jwt";
 import { ProductModule } from './product/product.module';
 import {UsersGuard} from "./users/users.guard";
+import { FavoriteService } from './favorite/favorite.service';
+import { FavoriteModule } from './favorite/favorite.module';
+import {ProductService} from "./product/product.service";
+import {TokenService} from "./token/token.service";
 
 @Module({
-  imports: [UsersModule, ConfigModule.forRoot({ isGlobal: true }), TokenModule, ProductModule],
+  imports: [UsersModule, ConfigModule.forRoot({ isGlobal: true }), TokenModule, ProductModule, FavoriteModule],
   controllers: [AppController, UsersController],
-  providers: [AppService, JwtService, UsersGuard],
+  providers: [AppService, JwtService, UsersGuard, FavoriteService, PrismaService, ProductService, TokenService],
 })
 export class AppModule {}

@@ -66,6 +66,11 @@ export class TokenService {
       expiresIn: '30m'
     })
 
+    await this.prisma.user.update({
+      where: { refreshToken },
+      data: { accessToken }
+    })
+
     return accessToken
   }
 
@@ -134,5 +139,26 @@ export class TokenService {
     }
 
     return refreshToken
+  }
+
+
+  async isValidAccessToken(accessToken: string, res: Response) {
+    const verifyAccess = this.jwtService.verify(accessToken, { secret: process.env.SECRET })
+
+    if (!verifyAccess) {
+
+      const result = await this.findRefreshInDB(accessToken)
+      if (result === "not found") return false
+
+      const valid = this.jwtService.verify(result.refreshToken, { secret: process.env.SECRET })
+      if (!valid) return false
+
+      const newAccessToken = await this.regenerateAccessByRefresh(result.refreshToken)
+      res.cookie('accessToken', newAccessToken)
+
+      return newAccessToken
+    }
+
+    return true
   }
 }

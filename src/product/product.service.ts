@@ -1,7 +1,8 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {PrismaService} from "../prisma.service";
-import {ChangeProductDto, CreateProductDto} from "../DTO/ProductDto";
-import {find} from "rxjs";
+import {ChangeProductDto, CreateProductDto, DeleteProductDto} from "../DTO/ProductDto";
+import * as util from "util";
+import * as fs from "fs";
 
 @Injectable()
 export class ProductService {
@@ -21,6 +22,7 @@ export class ProductService {
       }, HttpStatus.BAD_REQUEST)
     }
 
+
     await this.prisma.brand.create({
       data: {
         name
@@ -39,6 +41,8 @@ export class ProductService {
     const findCategory = await this.prisma.category.findUnique({
       where: { type }
     })
+
+    console.log('addBrand: ' + type)
 
     if (findCategory) {
       throw new HttpException({
@@ -130,43 +134,64 @@ export class ProductService {
     }, HttpStatus.CREATED)
   }
 
-  async getAllProducts() {
+  async getAllProducts(category: string, brand: string, name: string) {
+    let where = {};
+    if (name) where['name'] = { contains: name };
 
-    // Get all the products from DB
-    const allProductFind = await this.prisma.product.findMany({
-      include: {
-        Brand: true,
-        Category: true
+
+    if (brand) {
+      const findBrand = await this.prisma.brand.findUnique({ where: { name: brand } })
+      if (!findBrand) {
+        throw new HttpException({
+          statusCode: 404,
+          message: 'brand not found'
+        }, HttpStatus.NOT_FOUND)
       }
-    })
-
-    if (!allProductFind) {
-      throw new HttpException({
-        statusCode: 400,
-        message: 'There is not a single product'
-      }, HttpStatus.BAD_REQUEST)
+      else where['brandId'] = findBrand.id
+    }
+    if (category) {
+      const findCategory = await this.prisma.category.findUnique({ where: { type: category } })
+      if (!findCategory) {
+        throw new HttpException({
+          statusCode: 404,
+          message: 'category not found'
+        }, HttpStatus.NOT_FOUND)
+      }
+      else where['categoryId'] = findCategory.id
     }
 
-    // Go through the data of each product and return only the necessary data
-    const allProduct = allProductFind.map((m) => {
+
+    const products = await this.prisma.product.findMany({
+      where,
+      include: { Category: true, Brand: true }
+    });
+
+    if (!products.length) {
+      throw new HttpException({
+        statusCode: 404,
+        message: 'not found'
+      }, HttpStatus.NOT_FOUND);
+    }
+
+    const productData = products.map(m => {
       const averageRating = m.rating.reduce((a, b) => a + b, 0) / m.rating.length;
       return {
         id: m.id,
         name: m.name,
         price: m.price,
+        discount: m.discount,
         description: m.description,
-        brandName: m.Brand.name,
-        category: m.Category.type,
-        averageRating: averageRating
-      }
-    })
+        rating: averageRating,
+        brand: m.Brand.name,
+        category: m.Category.type
+      };
+    });
 
-    // If everything's good, we return all the products
     throw new HttpException({
       statusCode: 200,
-      message: 'get all products',
-      data: allProduct
-    }, HttpStatus.OK)
+      message: 'products get',
+      data: productData
+    }, HttpStatus.OK);
   }
 
   async changeProduct(changeProduct: ChangeProductDto) {
@@ -211,6 +236,74 @@ export class ProductService {
         category: updateProduct.Category.type
       }
     }, HttpStatus.OK)
+  }
 
+  async deleteProduct(deleteProduct: DeleteProductDto) {
+    const findProduct = await this.prisma.product.findUnique({
+      where: { id: deleteProduct.id }
+    })
+
+    if (!findProduct) {
+      throw new HttpException({
+        statusCode: 404,
+        message: 'this product was not found'
+      }, HttpStatus.NOT_FOUND)
+    }
+
+    const deletedProduct = await this.prisma.product.delete({
+      where: { id: deleteProduct.id }
+    })
+
+    if (!deletedProduct) {
+      throw new HttpException({
+        statusCode: 400,
+        message: 'product not deleted, try again'
+      }, HttpStatus.BAD_REQUEST)
+    }
+
+    throw new HttpException({
+      statusCode: 204,
+      message: 'product has been successfully removed',
+      data: {
+        id: deletedProduct.id,
+        name: deletedProduct.name,
+        price: deletedProduct.price,
+        description: deletedProduct.description
+      }
+    }, HttpStatus.OK)
+  }
+
+  async getAllBrands() {
+    const all = await this.prisma.brand.findMany()
+
+    if (!all) {
+      throw new HttpException({
+        statusCode: 404,
+        message: 'not found',
+      }, HttpStatus.NOT_FOUND)
+    }
+
+    throw new HttpException({
+      statusCode: 200,
+      message: 'ok',
+      data: all
+    }, HttpStatus.OK)
+  }
+
+  async getAllCategory() {
+    const all = await this.prisma.category.findMany()
+
+    if (!all) {
+      throw new HttpException({
+        statusCode: 404,
+        message: 'not found',
+      }, HttpStatus.NOT_FOUND)
+    }
+
+    throw new HttpException({
+      statusCode: 200,
+      message: 'ok',
+      data: all
+    }, HttpStatus.OK)
   }
 }

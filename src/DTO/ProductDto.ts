@@ -1,5 +1,6 @@
 import {IsArray, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Length, Max, Min} from "class-validator"
 import {IsNotEmail} from "../utils";
+import 'multer';
 
 export class AddBrandDto {
   @IsString() @Length(3, 70)
@@ -53,9 +54,18 @@ export class ChangeProductDto {
   @IsOptional() @IsString() @Length(10, 1500)
   description: string
 
-  @IsNumber() @IsPositive()
+  @IsOptional() @IsNumber() @IsPositive()
   brandId: number
 
-  @IsNumber() @IsPositive()
+  @IsOptional() @IsNumber() @IsPositive()
   categoryId: number
+
+}
+
+
+export class DeleteProductDto {
+  @IsNumber()
+  @IsPositive()
+  @IsNotEmpty()
+  id: number
 }

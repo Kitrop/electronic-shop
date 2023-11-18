@@ -5,6 +5,7 @@ import {Response} from "express";
 import {Roles} from "./users.decorator";
 import {UsersGuard} from "./users.guard";
 import {UnauthorisedGuard} from "./login.guard";
+import {DeleteProductDto} from "../DTO/ProductDto";
 
 @Controller('users')
 export class UsersController {
@@ -44,14 +45,18 @@ export class UsersController {
     return 'success'
   }
 
-
+  @UseGuards(UsersGuard)
+  @Roles('ADMIN')
   @Post('/change/role')
   async changeRole(@Body() changeRole: ChangeRoleDto) {
     return this.usersService.changeRole(changeRole)
   }
 
+  @UseGuards(UsersGuard)
+  @Roles('ADMIN')
   @Post('/change/password')
   async changePassword(@Body() changePassword: ChangePasswordDto) {
     return this.usersService.changePassword(changePassword.id, changePassword.oldPassword, changePassword.newPassword)
   }
+
 }

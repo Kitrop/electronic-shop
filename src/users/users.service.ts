@@ -48,7 +48,7 @@ export class UsersService {
         username: createUser.username,
         password: hashPassword,
         accessToken: '',
-        refreshToken: ''
+        refreshToken: '',
       },
     })
 
