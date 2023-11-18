@@ -11,16 +11,17 @@ datasource db {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   username     String
-  email        String   @unique
+  email        String     @unique
   password     String
-  role         Role     @default(NOT_ACTIVE)
-  createdAt    DateTime @default(now())
-  accessToken  String   @unique
-  refreshToken String   @unique
+  role         Role       @default(NOT_ACTIVE)
+  createdAt    DateTime   @default(now())
+  accessToken  String     @unique
+  refreshToken String     @unique
   Review       Review[]
   Order        Order[]
+  Favorite     Favorite[]
 }
 
 model Product {
@@ -83,6 +84,8 @@ model Category {
 
 model Favorite {
   id        Int     @id @default(autoincrement())
+  userId    Int
+  User      User    @relation(fields: [userId], references: [id])
   productId Int
   Product   Product @relation(fields: [productId], references: [id])
 }
