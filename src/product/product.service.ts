@@ -192,7 +192,6 @@ export class ProductService {
         decodeAccessToken = await this.jwtService.decode(data)
     }
 
-    console.log(products)
     const productData = products.map(m => {
       const averageRating = m.rating.reduce((a, b) => a + b, 0) / m.rating.length
 
