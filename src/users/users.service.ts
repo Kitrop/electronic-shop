@@ -174,8 +174,8 @@ export class UsersService {
       role: candidate.role
     })
 
+    console.log('accessToken:')
     console.log(tokens.accessToken)
-
     res.cookie('accessToken', tokens.accessToken)
 
     await this.prisma.user.update({
@@ -185,7 +185,7 @@ export class UsersService {
         refreshToken: tokens.refreshToken,
       },
     });
-
+    console.log('accessToken in user login: ' + tokens.accessToken)
 
     // User login
     throw new HttpException({

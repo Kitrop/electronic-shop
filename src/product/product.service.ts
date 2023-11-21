@@ -1,18 +1,19 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {PrismaService} from "../prisma.service";
-import {ChangeProductDto, CreateProductDto, DeleteProductDto} from "../DTO/ProductDto";
-import * as util from "util";
-import * as fs from "fs";
+import {HttpException, HttpStatus, Injectable} from '@nestjs/common'
+import {PrismaService} from '../prisma.service'
+import {Request, Response} from 'express'
+import {ChangeProductDto, CreateProductDto, DeleteProductDto} from '../DTO/ProductDto'
+import {JwtService} from '@nestjs/jwt'
+import {TokenService} from '../token/token.service'
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(private readonly prisma: PrismaService, private readonly jwtService: JwtService, private readonly tokenService: TokenService) {
   }
 
   async addBrand(name: string) {
 
     const findBrand = await this.prisma.brand.findUnique({
-      where: { name }
+      where: {name}
     })
 
     if (findBrand) {
@@ -39,10 +40,8 @@ export class ProductService {
   async addCategory(type: string) {
 
     const findCategory = await this.prisma.category.findUnique({
-      where: { type }
+      where: {type}
     })
-
-    console.log('addBrand: ' + type)
 
     if (findCategory) {
       throw new HttpException({
@@ -115,7 +114,7 @@ export class ProductService {
     }
 
     // Average rating for product
-    const averageRating = newProduct.rating.reduce((a, b) => a + b, 0) / newProduct.rating.length;
+    const averageRating = newProduct.rating.reduce((a, b) => a + b, 0) / newProduct.rating.length
 
     // Product created
     throw new HttpException({
@@ -134,49 +133,73 @@ export class ProductService {
     }, HttpStatus.CREATED)
   }
 
-  async getAllProducts(category: string, brand: string, name: string) {
-    let where = {};
-    if (name) where['name'] = { contains: name };
+  async getAllProducts(category: string, brand: string, name: string, req: Request, res: Response) {
+    let where = {}
+    if (name) where['name'] = {contains: name}
 
 
     if (brand) {
-      const findBrand = await this.prisma.brand.findUnique({ where: { name: brand } })
+      const findBrand = await this.prisma.brand.findUnique({where: {name: brand}})
       if (!findBrand) {
         throw new HttpException({
           statusCode: 404,
           message: 'brand not found'
         }, HttpStatus.NOT_FOUND)
-      }
-      else where['brandId'] = findBrand.id
+      } else where['brandId'] = findBrand.id
     }
     if (category) {
-      const findCategory = await this.prisma.category.findUnique({ where: { type: category } })
+      const findCategory = await this.prisma.category.findUnique({where: {type: category}})
       if (!findCategory) {
         throw new HttpException({
           statusCode: 404,
           message: 'category not found'
         }, HttpStatus.NOT_FOUND)
-      }
-      else where['categoryId'] = findCategory.id
+      } else where['categoryId'] = findCategory.id
     }
 
 
     const products = await this.prisma.product.findMany({
       where,
-      include: { Category: true, Brand: true, Favorite: true }
-    });
+      include: {Category: true, Brand: true, Favorite: true}
+    })
 
     if (!products.length) {
       throw new HttpException({
         statusCode: 404,
         message: 'not found'
-      }, HttpStatus.NOT_FOUND);
+      }, HttpStatus.NOT_FOUND)
     }
 
-    const productData = products.map(m => {
-      const averageRating = m.rating.reduce((a, b) => a + b, 0) / m.rating.length;
+    const cookies = req.cookies
+    console.log(cookies.accessToken)
 
-      let isFavorite = m.Favorite.some(f => m.id === f.productId)
+    let decodeAccessToken: any
+
+    if (cookies.accessToken) {
+      decodeAccessToken = await this.jwtService.decode(cookies.accessToken)
+
+      console.log(cookies.accessToken)
+      // const data = await this.tokenService.isValidAccessToken(cookies.accessToken, res)
+      const data = await this.tokenService.tokenManager(cookies.accessToken, res)
+
+      if (!data) {
+        throw new HttpException({
+          statusCode: 400,
+          message: 'incorrect token'
+        }, HttpStatus.BAD_REQUEST)
+      }
+
+      if (typeof data === 'string')
+        decodeAccessToken = await this.jwtService.decode(data)
+    }
+
+
+    const productData = products.map(async m => {
+      const averageRating = m.rating.reduce((a, b) => a + b, 0) / m.rating.length
+
+      let isFavorite = false
+      if (cookies.accessToken)
+        isFavorite = m.Favorite.some((fav) => m.id === fav.productId && decodeAccessToken.data.id === fav.userId)
 
       return {
         id: m.id,
@@ -188,14 +211,14 @@ export class ProductService {
         brand: m.Brand.name,
         category: m.Category.type,
         isFavorite
-      };
-    });
+      }
+    })
 
     throw new HttpException({
       statusCode: 200,
       message: 'products get',
       data: productData
-    }, HttpStatus.OK);
+    }, HttpStatus.OK)
   }
 
   async changeProduct(changeProduct: ChangeProductDto) {
@@ -208,7 +231,7 @@ export class ProductService {
     }
 
     const findProduct = await this.prisma.product.findUnique({
-      where: { id: changeProduct.id }
+      where: {id: changeProduct.id}
     })
 
     if (!findProduct) {
@@ -219,7 +242,7 @@ export class ProductService {
     }
 
     const updateProduct = await this.prisma.product.update({
-      where: { id: changeProduct.id },
+      where: {id: changeProduct.id},
       include: {
         Brand: true,
         Category: true
@@ -244,7 +267,7 @@ export class ProductService {
 
   async deleteProduct(deleteProduct: DeleteProductDto) {
     const findProduct = await this.prisma.product.findUnique({
-      where: { id: deleteProduct.id }
+      where: {id: deleteProduct.id}
     })
 
     if (!findProduct) {
@@ -255,7 +278,7 @@ export class ProductService {
     }
 
     const deletedProduct = await this.prisma.product.delete({
-      where: { id: deleteProduct.id }
+      where: {id: deleteProduct.id}
     })
 
     if (!deletedProduct) {

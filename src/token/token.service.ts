@@ -3,7 +3,7 @@ import {generateTokensDto} from "../DTO/TokenDto";
 import {JwtService} from "@nestjs/jwt";
 import * as process from "process";
 import {PrismaService} from "../prisma.service";
-import {Response} from "express";
+import {Request, Response} from 'express'
 import {retry} from "rxjs";
 
 @Injectable()
@@ -16,7 +16,11 @@ export class TokenService {
 
       // Create access token, time = 30 minute
       const accessToken = this.jwtService.sign(
-        {data},
+        {
+          id: data.id,
+          email: data.email,
+          role: data.role
+        },
         {
           secret: process.env.SECRET,
           expiresIn: '1m',
@@ -54,10 +58,6 @@ export class TokenService {
       }, HttpStatus.BAD_REQUEST)
     }
 
-
-    console.log('refresh token data')
-    console.log(verifyRefreshToken.data.role)
-
     const payload = {
       id: verifyRefreshToken.data.id,
       username: verifyRefreshToken.data.username,
@@ -84,8 +84,6 @@ export class TokenService {
       select: { refreshToken: true }
     })
 
-    console.log(`Find data: ${findData}`)
-
     if (!findData || !findData.refreshToken) {
       throw new HttpException({
         statusCode: 404,
@@ -94,8 +92,6 @@ export class TokenService {
     }
 
     const isValid = await this.jwtService.verify(findData.refreshToken, { secret: process.env.SECRET })
-
-    console.log(`isValid: ${isValid}`)
 
     if (!isValid) {
       throw new HttpException({
@@ -129,7 +125,7 @@ export class TokenService {
   }
 
   async findRefreshInDB(accessToken: string) {
-    const refreshToken = this.prisma.user.findUnique({
+    const refreshToken = await this.prisma.user.findUnique({
       where: {
         accessToken
       },
@@ -153,17 +149,16 @@ export class TokenService {
     }
     catch (e) {
       const result = await this.findRefreshInDB(accessToken)
-      if (result === "not found") return false
 
+
+      if (result === "not found") return false
 
       if (!result || !result.refreshToken) {
         throw new HttpException({
           statusCode: 400,
-          message: 'invalid token'
+          message: 'invalid token asd'
         }, HttpStatus.BAD_REQUEST)
       }
-
-      if (result && result.refreshToken) console.log(result.refreshToken)
 
       const valid = this.jwtService.verify(result.refreshToken, { secret: process.env.SECRET })
       if (!valid) return false
@@ -173,5 +168,62 @@ export class TokenService {
 
       return newAccessToken
     }
+  }
+
+
+  async findRefreshTokens(accessToken: string) {
+
+    const findAccessInDb = await this.prisma.user.findUnique({
+      where: { accessToken },
+      select: { accessToken: true, refreshToken: true }
+    })
+
+    if (!findAccessInDb) return 'refresh token not found'
+
+    return findAccessInDb.refreshToken
+  }
+
+  async verifyRefreshToken(refreshToken: string) {
+    try {
+      const isValidRefreshToken = await this.jwtService.verify(refreshToken, { secret: process.env.SECRET })
+      return true
+    } catch (e) {
+      console.log(e)
+      return false
+    }
+  }
+
+  async createNewAccessToken(refreshToken: string, res: Response) {
+
+    const decodedRefreshToken = await this.jwtService.decode(refreshToken)
+
+    const newAccessToken = this.jwtService.sign(decodedRefreshToken.data, {secret: process.env.SECRET})
+
+    const userId: number = decodedRefreshToken.data.id
+
+    res.cookie('accessToken', newAccessToken)
+
+    await this.prisma.user.update({
+      where: {
+        id: userId
+      },
+      data: {
+        accessToken: newAccessToken
+      }
+    })
+
+    return newAccessToken
+  }
+
+
+  async tokenManager(accessToken: string, res: Response) {
+    const findResult = await this.findRefreshTokens(accessToken)
+    if (findResult === "refresh token not found") return false
+
+    const verifyTokenResult = await this.verifyRefreshToken(findResult)
+    if (!verifyTokenResult) return false
+
+    const createResult = await this.createNewAccessToken(findResult, res)
+    return createResult
   }
 }

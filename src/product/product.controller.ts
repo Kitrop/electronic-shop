@@ -1,8 +1,9 @@
-import {Body, Controller, Get, Post, Query, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, Post, Query, Req, Res, UseGuards} from '@nestjs/common'
 import {ProductService} from "./product.service";
 import {AddBrandDto, AddCategoryDto, ChangeProductDto, CreateProductDto, DeleteProductDto} from "../DTO/ProductDto";
 import {UsersGuard} from "../users/users.guard";
 import {Roles} from "../users/users.decorator";
+import {Request, Response} from 'express'
 
 @Controller('product')
 export class ProductController {
@@ -37,8 +38,8 @@ export class ProductController {
   }
 
   @Get('all')
-  async getAll(@Query() query: any) {
-    return this.productService.getAllProducts(query.category, query.brand, query.name)
+  async getAll(@Query() query: any, @Req() req: Request, @Res() res: Response) {
+    return this.productService.getAllProducts(query.category, query.brand, query.name, req, res)
   }
 
   @Get('/brand/all')

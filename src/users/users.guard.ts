@@ -39,12 +39,10 @@ export class UsersGuard implements CanActivate {
       }
     }
     catch (e) {
-      console.log('first catch')
       // Нужно найти и создать новый токен
       const result = await this.tokenService.isValidAccessToken(token.accessToken, res)
 
       if (!result) {
-        console.log('some error')
         throw new HttpException({
           statusCode: 401,
           message: 'Invalid accessToken, catch'
@@ -60,7 +58,6 @@ export class UsersGuard implements CanActivate {
       const decodeAccessToken = await this.jwtService.decode(token.accessToken) ///
 
       if(!decodeAccessToken || !decodeAccessToken.exp) {
-        console.log('error by time')
         throw new HttpException({
           statusCode: 401,
           message: 'Invalid accessToken by time'
@@ -70,14 +67,12 @@ export class UsersGuard implements CanActivate {
       const currentTime = Math.floor(Date.now() / 1000)
       if (currentTime > decodeAccessToken.exp) {
         token.accessToken = await this.tokenService.findRefreshToken(token.accessToken, res)
-        console.log("!!!")
       }
 
       const user = this.jwtService.verify(token.accessToken, {secret: process.env.SECRET}) ///
       req.user = user
 
-      console.log(user)
-      return requiredRoles.includes(user.role)
+      return requiredRoles.some(role => user.role.includes(role));
     }
     catch(e) {
       console.log(e)
@@ -85,3 +80,4 @@ export class UsersGuard implements CanActivate {
     }
   }
 }
+

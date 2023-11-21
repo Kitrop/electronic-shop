@@ -39,7 +39,7 @@ export class UsersController {
   }
 
   @UseGuards(UsersGuard)
-  @Roles('ADMIN')
+  @Roles('ADMIN', 'USER')
   @Get('test')
   async test() {
     return 'success'
