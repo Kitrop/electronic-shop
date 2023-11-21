@@ -171,7 +171,6 @@ export class ProductService {
     }
 
     const cookies = req.cookies
-    console.log(cookies.accessToken)
 
     let decodeAccessToken: any
 
@@ -193,13 +192,13 @@ export class ProductService {
         decodeAccessToken = await this.jwtService.decode(data)
     }
 
-
-    const productData = products.map(async m => {
+    console.log(products)
+    const productData = products.map(m => {
       const averageRating = m.rating.reduce((a, b) => a + b, 0) / m.rating.length
 
       let isFavorite = false
-      if (cookies.accessToken)
-        isFavorite = m.Favorite.some((fav) => m.id === fav.productId && decodeAccessToken.data.id === fav.userId)
+
+      if (cookies.accessToken) isFavorite = m.Favorite.some((fav) => m.id === fav.productId && decodeAccessToken.id === fav.userId)
 
       return {
         id: m.id,
