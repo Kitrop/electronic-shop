@@ -13,9 +13,10 @@ import { FavoriteService } from './favorite/favorite.service';
 import { FavoriteModule } from './favorite/favorite.module';
 import {ProductService} from "./product/product.service";
 import {TokenService} from "./token/token.service";
+import { OrderModule } from './order/order.module';
 
 @Module({
-  imports: [UsersModule, ConfigModule.forRoot({ isGlobal: true }), TokenModule, ProductModule, FavoriteModule],
+  imports: [UsersModule, ConfigModule.forRoot({ isGlobal: true }), TokenModule, ProductModule, FavoriteModule, OrderModule],
   controllers: [AppController, UsersController],
   providers: [AppService, JwtService, UsersGuard, FavoriteService, PrismaService, ProductService, TokenService],
 })

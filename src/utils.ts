@@ -46,3 +46,19 @@ export function IsNotEmail(validationOptions?: ValidationOptions) {
     });
   };
 }
+
+[{}, {}, {}]
+{
+
+}
+
+
+export function checkUniqArrWithObj(arr: ObjArr[]) {
+  const map = new Map()
+  return !arr.some(obj => map.has(obj.productId) ? true : !map.set(obj.productId, true))
+}
+
+interface ObjArr {
+  productId: number,
+  count: number
+}

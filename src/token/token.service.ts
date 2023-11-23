@@ -172,37 +172,46 @@ export class TokenService {
 
 
   async findRefreshTokens(accessToken: string) {
-
+    // Search for the access token in the database
     const findAccessInDb = await this.prisma.user.findUnique({
       where: { accessToken },
       select: { accessToken: true, refreshToken: true }
     })
 
+    // If the access token is not found, return a message
     if (!findAccessInDb) return 'refresh token not found'
 
+    // Return the refresh token associated with the access token
     return findAccessInDb.refreshToken
   }
 
   async verifyRefreshToken(refreshToken: string) {
     try {
+      // Verify the refresh token using the secret key
       const isValidRefreshToken = await this.jwtService.verify(refreshToken, { secret: process.env.SECRET })
       return true
     } catch (e) {
+      // Log any errors and return false
       console.log(e)
       return false
     }
   }
 
   async createNewAccessToken(refreshToken: string, res: Response) {
-
+    // Decode the refresh token
     const decodedRefreshToken = await this.jwtService.decode(refreshToken)
 
+    // Sign a new access token using the decoded refresh token data and the secret key
     const newAccessToken = this.jwtService.sign(decodedRefreshToken.data, {secret: process.env.SECRET})
 
+    // Extract the user id from the decoded refresh token data
     const userId: number = decodedRefreshToken.data.id
 
+    // Log the new access token and set it as a cookie in the response
+    console.log('newAccessToken: ' + newAccessToken)
     res.cookie('accessToken', newAccessToken)
 
+    // Update the access token in the database for the user
     await this.prisma.user.update({
       where: {
         id: userId
@@ -212,17 +221,20 @@ export class TokenService {
       }
     })
 
+    // Return the new access token
     return newAccessToken
   }
 
-
   async tokenManager(accessToken: string, res: Response) {
+    // Find the refresh tokens for the given access token
     const findResult = await this.findRefreshTokens(accessToken)
     if (findResult === "refresh token not found") return false
 
+    // Verify the found refresh token
     const verifyTokenResult = await this.verifyRefreshToken(findResult)
     if (!verifyTokenResult) return false
 
+    // Create a new access token using the verified refresh token
     const createResult = await this.createNewAccessToken(findResult, res)
     return createResult
   }

@@ -134,35 +134,41 @@ export class ProductService {
   }
 
   async getAllProducts(category: string, brand: string, name: string, req: Request, res: Response) {
+    // Create an empty object for search conditions
     let where = {}
+    // If a name is given, add it to the search conditions
     if (name) where['name'] = {contains: name}
 
-
+    // If a brand is given, search for it in the database
     if (brand) {
       const findBrand = await this.prisma.brand.findUnique({where: {name: brand}})
+      // If the brand is not found, throw an exception
       if (!findBrand) {
         throw new HttpException({
           statusCode: 404,
           message: 'brand not found'
         }, HttpStatus.NOT_FOUND)
-      } else where['brandId'] = findBrand.id
+      } else where['brandId'] = findBrand.id // Otherwise, add the brand id to the search conditions
     }
+    // If a category is given, search for it in the database
     if (category) {
       const findCategory = await this.prisma.category.findUnique({where: {type: category}})
+      // If the category is not found, throw an exception
       if (!findCategory) {
         throw new HttpException({
           statusCode: 404,
           message: 'category not found'
         }, HttpStatus.NOT_FOUND)
-      } else where['categoryId'] = findCategory.id
+      } else where['categoryId'] = findCategory.id // Otherwise, add the category id to the search conditions
     }
 
-
+    // Search for products with the given conditions
     const products = await this.prisma.product.findMany({
       where,
       include: {Category: true, Brand: true, Favorite: true}
     })
 
+    // If no products are found, throw an exception
     if (!products.length) {
       throw new HttpException({
         statusCode: 404,
@@ -170,17 +176,19 @@ export class ProductService {
       }, HttpStatus.NOT_FOUND)
     }
 
+    // Get cookies from the request
     const cookies = req.cookies
 
     let decodeAccessToken: any
 
+    // If there is an accessToken in the cookies, decode it
     if (cookies.accessToken) {
       decodeAccessToken = await this.jwtService.decode(cookies.accessToken)
 
-      console.log(cookies.accessToken)
-      // const data = await this.tokenService.isValidAccessToken(cookies.accessToken, res)
+      // Check the validity of the token
       const data = await this.tokenService.tokenManager(cookies.accessToken, res)
 
+      // If the token is invalid, throw an exception
       if (!data) {
         throw new HttpException({
           statusCode: 400,
@@ -188,17 +196,22 @@ export class ProductService {
         }, HttpStatus.BAD_REQUEST)
       }
 
+      // If the token is valid, decode it
       if (typeof data === 'string')
         decodeAccessToken = await this.jwtService.decode(data)
     }
 
+    // Process the product data
     const productData = products.map(m => {
+      // Calculate the average rating
       const averageRating = m.rating.reduce((a, b) => a + b, 0) / m.rating.length
 
       let isFavorite = false
 
+      // If there is an accessToken in the cookies, check if the product is a favorite
       if (cookies.accessToken) isFavorite = m.Favorite.some((fav) => m.id === fav.productId && decodeAccessToken.id === fav.userId)
 
+      // Return the processed product data
       return {
         id: m.id,
         name: m.name,
@@ -212,6 +225,7 @@ export class ProductService {
       }
     })
 
+    // Return a successful response with the product data
     throw new HttpException({
       statusCode: 200,
       message: 'products get',
@@ -220,7 +234,7 @@ export class ProductService {
   }
 
   async changeProduct(changeProduct: ChangeProductDto) {
-
+    // Check if all the required data is provided
     if (!changeProduct.name && !changeProduct.description && !changeProduct.discount && !changeProduct.description) {
       throw new HttpException({
         statusCode: 400,
@@ -228,10 +242,12 @@ export class ProductService {
       }, HttpStatus.BAD_REQUEST)
     }
 
+    // Find the product in the database
     const findProduct = await this.prisma.product.findUnique({
       where: {id: changeProduct.id}
     })
 
+    // If the product is not found, throw an exception
     if (!findProduct) {
       throw new HttpException({
         statusCode: 400,
@@ -239,6 +255,7 @@ export class ProductService {
       }, HttpStatus.BAD_REQUEST)
     }
 
+    // Update the product in the database
     const updateProduct = await this.prisma.product.update({
       where: {id: changeProduct.id},
       include: {
@@ -248,6 +265,7 @@ export class ProductService {
       data: changeProduct
     })
 
+    // Return a successful response with the updated product data
     throw new HttpException({
       statusCode: 200,
       message: 'product update',
@@ -264,10 +282,12 @@ export class ProductService {
   }
 
   async deleteProduct(deleteProduct: DeleteProductDto) {
+    // Find the product in the database
     const findProduct = await this.prisma.product.findUnique({
       where: {id: deleteProduct.id}
     })
 
+    // If the product is not found, throw an exception
     if (!findProduct) {
       throw new HttpException({
         statusCode: 404,
@@ -275,10 +295,12 @@ export class ProductService {
       }, HttpStatus.NOT_FOUND)
     }
 
+    // Delete the product from the database
     const deletedProduct = await this.prisma.product.delete({
       where: {id: deleteProduct.id}
     })
 
+    // If the product is not deleted, throw an exception
     if (!deletedProduct) {
       throw new HttpException({
         statusCode: 400,
@@ -286,6 +308,7 @@ export class ProductService {
       }, HttpStatus.BAD_REQUEST)
     }
 
+    // Return a successful response indicating the product has been removed
     throw new HttpException({
       statusCode: 204,
       message: 'product has been successfully removed',
