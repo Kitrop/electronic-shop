@@ -1,4 +1,4 @@
-import {IsNumber, IsPositive, IsString} from 'class-validator'
+import {IsNotEmpty, IsNumber, IsPositive, IsString} from 'class-validator'
 
 export class CreateOrderDto {
   @IsNumber()
@@ -8,4 +8,14 @@ export class CreateOrderDto {
   @IsNumber()
   @IsPositive()
   count: number
+}
+
+export class ChangeStatusDto {
+  @IsNumber()
+  @IsPositive()
+  idOrder: number
+
+  @IsString()
+  @IsNotEmpty()
+  status: string
 }

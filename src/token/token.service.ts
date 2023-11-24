@@ -4,7 +4,6 @@ import {JwtService} from "@nestjs/jwt";
 import * as process from "process";
 import {PrismaService} from "../prisma.service";
 import {Request, Response} from 'express'
-import {retry} from "rxjs";
 
 @Injectable()
 export class TokenService {
@@ -208,7 +207,7 @@ export class TokenService {
     const userId: number = decodedRefreshToken.data.id
 
     // Log the new access token and set it as a cookie in the response
-    console.log('newAccessToken: ' + newAccessToken)
+    // console.log('newAccessToken: ' + newAccessToken)
     res.cookie('accessToken', newAccessToken)
 
     // Update the access token in the database for the user

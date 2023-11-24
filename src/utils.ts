@@ -62,3 +62,26 @@ interface ObjArr {
   productId: number,
   count: number
 }
+
+export interface IOrder {
+  id: number,
+  userId: number,
+  summary: number,
+  status: string,
+  Order_Product: InterfaceOrderProduct[]
+}
+
+interface InterfaceOrderProduct {
+  orderId: number,
+  productId: number,
+  count: number
+}
+
+export interface productDataMap {
+  orderId: number,
+  productId: number,
+  name: string,
+  price: number,
+  discount: number,
+  count: number
+}
