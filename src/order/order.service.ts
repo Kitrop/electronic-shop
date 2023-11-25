@@ -17,8 +17,6 @@ export class OrderService {
     // Create an array with products to combine the data conveniently
     const productArr: { productId: number, price: number, count: number }[] = []
 
-    console.log(res)
-
     // Get a cookie
     const cookies = req.cookies
 
@@ -134,7 +132,7 @@ export class OrderService {
     }, HttpStatus.CREATED)
   }
 
-  async getAllOrder() {
+  async getAllOrders() {
     // Getting all the orders together from the intermediate table
     let result: IOrder[] = await this.prisma.order.findMany({
       include: {
@@ -185,6 +183,95 @@ export class OrderService {
       message: 'OK',
       data: result
     }, HttpStatus.OK)
+  }
+
+  async getMyOrders(res: Response, req: Request) {
+    const cookies = req.cookies
+
+    if (!cookies.accessToken) throw new HttpException({
+      statusCode: 403,
+      message: 'user is not logged in'
+    }, HttpStatus.UNAUTHORIZED)
+
+    let decodeAccessToken: any
+
+    try {
+      this.jwtService.verify(cookies.accessToken, {secret: process.env.SECRET})
+      decodeAccessToken = await this.jwtService.verify(cookies.accessToken, { secret: process.env.SECRET })
+    } catch (e) {
+      // Request a new accessToken. The request is false if the request is unsuccessful, or a new token is received
+      const data = await this.tokenService.tokenManager(cookies.accessToken, res)
+
+      // If false during the request
+      if (!data) {
+        throw new HttpException({
+          statusCode: 400,
+          message: 'incorrect token'
+        }, HttpStatus.BAD_REQUEST)
+      }
+
+      // If a new accessToken has arrived
+      if (typeof data === 'string')
+        decodeAccessToken = await this.jwtService.verify(data, {secret: process.env.SECRET})
+    }
+
+    const userId = decodeAccessToken.id
+
+    let result: IOrder[] = await this.prisma.order.findMany({
+      where: {
+        userId
+      },
+      include: {
+        Order_Product: true
+      }
+    })
+
+    console.log(decodeAccessToken)
+
+    // Going through the array with order
+    for (let i = 0; i < result.length; i++) {
+
+      // Create an array in which we will store data for the modified value of Order_Product
+      const arrProduct: productDataMap[] = []
+
+      // Going through Order_Product
+      for (let j = 0; j < result[i].Order_Product.length; j++) {
+
+        // Find product data
+        const findProduct = await this.prisma.product.findUnique({
+          where: {
+            id: result[i].Order_Product[j].productId
+          }
+        })
+
+        if (!findProduct) throw new HttpException({
+          statusCode: 400,
+          message: 'product with this id does not exist'
+        }, HttpStatus.BAD_REQUEST)
+
+        // Create an object that further adds to the array arrProduct
+        const productObj = {
+          orderId: result[i].Order_Product[j].orderId,
+          productId: result[i].Order_Product[j].productId,
+          name: findProduct.name,
+          price: findProduct.price,
+          discount: findProduct.discount,
+          count: result[i].Order_Product[j].count
+        }
+
+        arrProduct.push(productObj)
+      }
+
+      // Change the value of Order_Product to a more detailed value
+      result[i].Order_Product = arrProduct
+    }
+
+    throw new HttpException({
+      statusCode: 200,
+      message: 'all user orders',
+      data: result
+    }, HttpStatus.OK)
+
   }
 
   async changeStatusOrder(idOrder: number, status: string) {

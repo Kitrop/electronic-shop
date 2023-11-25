@@ -18,11 +18,16 @@ export class OrderController {
 
   @Get('all')
   async all() {
-    return this.orderService.getAllOrder()
+    return this.orderService.getAllOrders()
   }
 
   @Post('change/status')
   async changeStatus(@Body() changeStatus: ChangeStatusDto) {
     return this.orderService.changeStatusOrder(changeStatus.idOrder, changeStatus.status)
+  }
+
+  @Get('my')
+  async getMyOrders(@Req() req: Request, @Res() res: Response) {
+    return this.orderService.getMyOrders(res, req)
   }
 }
