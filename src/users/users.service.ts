@@ -3,12 +3,13 @@ import {ChangeRoleDto, CreateUserDto, LoginDto} from "../DTO/UsersDto";
 import {PrismaService} from "../prisma.service";
 import {compare, hash} from "bcrypt";
 import {TokenService} from "../token/token.service";
-import {Response} from "express";
+import {Request, Response} from 'express'
 import {isRoleInEnum, RoleEnum} from "../utils";
+import {AuthService} from '../auth/auth.service'
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService, private readonly tokenService: TokenService) {
+  constructor(private prisma: PrismaService, private readonly tokenService: TokenService, private readonly authService: AuthService) {
   }
 
   async createUser(createUser: CreateUserDto, res: Response) {
@@ -262,21 +263,25 @@ export class UsersService {
     }, HttpStatus.OK)
   }
 
-  // TODO: Добавить в changePassword провеку jwt
-  async changePassword(id: number, oldPassword: string, newPassword: string) {
+  async changePassword(oldPassword: string, newPassword: string, res: Response, req: Request) {
 
-    // Find user by id
-    const candidate = await this.prisma.user.findUnique({
-      where: { id }
+    // Find userId in accessToken
+    const userId = await this.authService.getUserId(res, req)
+
+    // Check if user login
+    if (!userId) throw new HttpException({
+      statusCode: 403,
+      message: 'user not login'
+    }, HttpStatus.FORBIDDEN)
+
+    const findUser = await this.prisma.user.findUnique({
+      where: { id: userId }
     })
-    
-    // Check if user exists
-    if (!candidate) {
-      throw new HttpException({
-        statusCode: 404,
-        message: "user not found"
-      }, HttpStatus.NOT_FOUND)
-    }
+
+    if (findUser) throw new HttpException({
+      statusCode: 404,
+      message: 'user not found'
+    }, HttpStatus.NOT_FOUND)
 
     // If old password match with new password
     if (oldPassword === newPassword) {
@@ -288,7 +293,7 @@ export class UsersService {
 
 
     // Check old password with password user from DB
-    const isValidPassword = await compare(oldPassword, candidate.password)
+    const isValidPassword = await compare(oldPassword, findUser.password)
     
 
     // If password not compare
@@ -304,10 +309,9 @@ export class UsersService {
     
     // Update user password 
     const updateUser = await this.prisma.user.update({
-      where: { id },
+      where: { id: userId },
       data: { password: newHashPassword }
     })
-    
 
     // If there is an error
     if (!updateUser) {

@@ -71,7 +71,6 @@ export class UsersGuard implements CanActivate {
 
       const user = this.jwtService.verify(token.accessToken, {secret: process.env.SECRET}) ///
       req.user = user
-
       return requiredRoles.some(role => user.role.includes(role));
     }
     catch(e) {

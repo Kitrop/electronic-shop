@@ -205,6 +205,7 @@ export class ProductService {
     const productData = products.map(m => {
       // Calculate the average rating
       const averageRating = m.rating.reduce((a, b) => a + b, 0) / m.rating.length
+      const roundAverage = Math.round(averageRating * 10) / 10
 
       let isFavorite = false
 
@@ -218,7 +219,7 @@ export class ProductService {
         price: m.price,
         discount: m.discount,
         description: m.description,
-        rating: averageRating,
+        rating: roundAverage,
         brand: m.Brand.name,
         category: m.Category.type,
         isFavorite

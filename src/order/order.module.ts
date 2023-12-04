@@ -4,9 +4,10 @@ import { OrderController } from './order.controller';
 import {PrismaService} from '../prisma.service'
 import {JwtService} from '@nestjs/jwt'
 import {TokenService} from '../token/token.service'
+import {AuthService} from '../auth/auth.service'
 
 @Module({
-  providers: [OrderService, PrismaService, JwtService, TokenService],
+  providers: [OrderService, PrismaService, JwtService, TokenService, AuthService],
   controllers: [OrderController]
 })
 export class OrderModule {}

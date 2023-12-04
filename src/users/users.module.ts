@@ -5,9 +5,10 @@ import {PrismaService} from "../prisma.service";
 import {TokenService} from "../token/token.service";
 import {JwtService} from "@nestjs/jwt";
 import {UsersGuard} from "./users.guard";
+import {AuthService} from '../auth/auth.service'
 
 @Module({
-  providers: [UsersService, PrismaService, TokenService, JwtService, UsersService, UsersGuard],
+  providers: [UsersService, PrismaService, TokenService, JwtService, UsersService, UsersGuard, AuthService],
   controllers: [UsersController],
   exports: [UsersService, UsersGuard]
 })

@@ -1,11 +1,12 @@
-import {Body, Controller, Get, Post, Query, Res, UseGuards} from '@nestjs/common';
+import {Body, Controller, Get, Post, Query, Req, Res, UseGuards} from '@nestjs/common'
 import {ChangePasswordDto, ChangeRoleDto, CreateUserDto, LoginDto} from "../DTO/UsersDto";
 import {UsersService} from "./users.service";
-import {Response} from "express";
+import {Request, Response} from 'express'
 import {Roles} from "./users.decorator";
 import {UsersGuard} from "./users.guard";
 import {UnauthorisedGuard} from "./login.guard";
 import {DeleteProductDto} from "../DTO/ProductDto";
+import {LoggedInGuard} from './LoggedIn.guard'
 
 @Controller('users')
 export class UsersController {
@@ -23,6 +24,7 @@ export class UsersController {
     return this.usersService.login(login, res)
   }
 
+  @UseGuards(LoggedInGuard)
   @Get('logout')
   async logoutUser(@Res({ passthrough: true }) res: Response) {
     return this.usersService.logout(res)
@@ -55,8 +57,8 @@ export class UsersController {
   @UseGuards(UsersGuard)
   @Roles('ADMIN')
   @Post('/change/password')
-  async changePassword(@Body() changePassword: ChangePasswordDto) {
-    return this.usersService.changePassword(changePassword.id, changePassword.oldPassword, changePassword.newPassword)
+  async changePassword(@Body() changePassword: ChangePasswordDto, @Res() res: Response, @Req() req: Request) {
+    return this.usersService.changePassword(changePassword.oldPassword, changePassword.newPassword, res, req)
   }
 
 }

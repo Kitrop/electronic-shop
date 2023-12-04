@@ -14,10 +14,13 @@ import { FavoriteModule } from './favorite/favorite.module';
 import {ProductService} from "./product/product.service";
 import {TokenService} from "./token/token.service";
 import { OrderModule } from './order/order.module';
+import { ReviewModule } from './review/review.module';
+import { AuthModule } from './auth/auth.module';
+import {AuthService} from './auth/auth.service'
 
 @Module({
-  imports: [UsersModule, ConfigModule.forRoot({ isGlobal: true }), TokenModule, ProductModule, FavoriteModule, OrderModule],
+  imports: [UsersModule, ConfigModule.forRoot({ isGlobal: true }), TokenModule, ProductModule, FavoriteModule, OrderModule, ReviewModule, AuthModule],
   controllers: [AppController, UsersController],
-  providers: [AppService, JwtService, UsersGuard, FavoriteService, PrismaService, ProductService, TokenService],
+  providers: [AppService, JwtService, UsersGuard, FavoriteService, PrismaService, ProductService, TokenService, AuthService],
 })
 export class AppModule {}
