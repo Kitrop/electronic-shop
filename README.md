@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/github/last-commit/Kitrop/electronic-shop" alt="Last Commit">
   <img src="https://img.shields.io/github/issues/Kitrop/electronic-shop" alt="GitHub Issues">
   <img src="https://img.shields.io/github/stars/Kitrop/electronic-shop?style=social" alt="GitHub Stars">
-  <img src="https://img.shields.io/github/license/Kitrop/название_репозитория" alt="License">
+  <img src="https://img.shields.io/github/license/Kitrop/electronic-shop" alt="License">
 </p>
 
 ## 🚀 О проекте
