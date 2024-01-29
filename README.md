@@ -1,73 +1,44 @@
+# 🛒 Электронный Магазин API
+
+Добро пожаловать в репозиторий проекта API для электронного магазина, построенного с использованием фреймворка **NestJS**. Здесь вы найдете мощные возможности для создания, обновления и управления товарами, отзывами, пользователями, а также категориями и брендами.
+
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
+  <img src="https://img.shields.io/github/last-commit/Kitrop/electronic-shop" alt="Last Commit">
+  <img src="https://img.shields.io/github/issues/Kitrop/electronic-shop" alt="GitHub Issues">
+  <img src="https://img.shields.io/github/stars/Kitrop/electronic-shop?style=social" alt="GitHub Stars">
+  <img src="https://img.shields.io/github/license/Kitrop/название_репозитория" alt="License">
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 🚀 О проекте
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
+Этот проект предоставляет API для эффективного управления товарами, отзывами, пользователями, категориями и брендами в электронном магазине. Реализован на **NestJS** с использованием технологий **TypeScript**, **Bcrypt**, и **JWT** для безопасной аутентификации пользователей. В качестве базы данных используется **PostgreSQL** с использованием **Prisma ORM**.
+
+## ⚙️ Основные зависимости
+
+- ![NestJS](https://img.shields.io/badge/-NestJS-E0234E?style=flat-square&logo=NestJS&logoColor=white) **NestJS**: Фреймворк для построения эффективных и масштабируемых приложений.
+- ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-336791?style=flat-square&logo=PostgreSQL&logoColor=white) **PostgreSQL**: Реляционная база данных для хранения данных.
+- ![Prisma](https://img.shields.io/badge/-Prisma-2D3748?style=flat-square&logo=Prisma&logoColor=white) **Prisma ORM**: Мощный ORM для взаимодействия с базой данных.
+- ![JWT](https://img.shields.io/badge/-JWT-000000?style=flat-square&logo=JSON%20Web%20Tokens&logoColor=white) **JWT**: JSON Web Tokens для безопасной аутентификации.
+- **Bcrypt**: Для безопасного хэширования паролей пользователей.
+- **Class-Transformer & Class-Validator**: Для удобной валидации и трансформации данных.
+
+## 🔧 Установка и Запуск
+
+1. Склонируйте репозиторий: `git clone https://github.com/Ваш_Никнейм/название_репозитория.git`
+2. Установите зависимости: `yarn install`
+3. Запустите проект: `yarn start`
+
+## 🌱 Вклад в проект
+
+Если у вас есть предложения или вы хотите внести свой вклад, создайте issue, форкните репозиторий, внесите изменения и создайте Pull Request!
+
+## 🌐 Связаться со мной
+
+<p align="center">
+  <a href="mailto:zhenya.shabolin.03@gmail.com"><img src="https://img.shields.io/badge/-Email-D14836?style=flat-square&logo=Gmail&logoColor=white" alt="Email"></a>
+  <a href="https://t.me/ShbEvg"><img src="https://img.shields.io/badge/-Telegram-2CA5E0?style=flat-square&logo=Telegram&logoColor=white" alt="Telegram"></a>
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
-$ yarn install
-```
-
-## Running the app
-
-```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
-```
-
-## Test
-
-```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+👨‍💻 Ваши вопросы и предложения всегда приветствуются! **Спасибо за ваш вклад.** 🙌
