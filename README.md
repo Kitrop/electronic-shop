@@ -19,7 +19,7 @@
 - ![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-336791?style=flat-square&logo=PostgreSQL&logoColor=white) **PostgreSQL**: Реляционная база данных для хранения данных.
 - ![Prisma](https://img.shields.io/badge/-Prisma-2D3748?style=flat-square&logo=Prisma&logoColor=white) **Prisma ORM**: Мощный ORM для взаимодействия с базой данных.
 - ![JWT](https://img.shields.io/badge/-JWT-000000?style=flat-square&logo=JSON%20Web%20Tokens&logoColor=white) **JWT**: JSON Web Tokens для безопасной аутентификации.
-- ![Bcrypt](https://img.shields.io/badge/-Mongoose-880000?style=flat-square&logo=Bcrypt&logoColor=white) **Bcrypt**: Для безопасного хэширования паролей пользователей.
+- ![Bcrypt](https://img.shields.io/badge/-Bcrypt-880000?style=flat-square&logo=Bcrypt&logoColor=white) **Bcrypt**: Для безопасного хэширования паролей пользователей.
 - **Class-Transformer & Class-Validator**: Для удобной валидации и трансформации данных.
 
 ## 🔧 Установка и Запуск
